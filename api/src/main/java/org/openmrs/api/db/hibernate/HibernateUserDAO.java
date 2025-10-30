@@ -15,6 +15,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -628,6 +630,15 @@ public class HibernateUserDAO implements UserDAO {
 		
 		log.debug("name: " + name);
 		
+		String escapeChar = sessionFactory.getCurrentSession().doReturningWork(connection -> {
+			try {
+				return connection.getMetaData().getSearchStringEscape();
+			} catch (SQLException e) {
+				log.warn("Error getting search string escape character", e);
+				return "\\";
+			}
+		});
+		
 		name = HibernateUtil.escapeSqlWildcards(name, sessionFactory);
 		
 		// Create an HQL query like this:
@@ -651,9 +662,10 @@ public class HibernateUserDAO implements UserDAO {
 					String key = "name" + ++counter;
 					String value = n + "%";
 					namesMap.put(key, value);
-					criteria.add("(user.username like :" + key + " or user.systemId like :" + key
-					        + " or name.givenName like :" + key + " or name.middleName like :" + key
-					        + " or name.familyName like :" + key + " or name.familyName2 like :" + key + ")");
+					String escapeClause = " escape '" + escapeChar + "'";
+					criteria.add("(user.username like :" + key + escapeClause + " or user.systemId like :" + key + escapeClause
+					        + " or name.givenName like :" + key + escapeClause + " or name.middleName like :" + key + escapeClause
+					        + " or name.familyName like :" + key + escapeClause + " or name.familyName2 like :" + key + escapeClause + ")");
 				}
 			}
 		}
