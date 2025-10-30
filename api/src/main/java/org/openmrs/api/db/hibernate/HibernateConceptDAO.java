@@ -896,7 +896,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 		List<Concept> parents = new ArrayList<>();
 		if (current != null) {
 			Query query = sessionFactory.getCurrentSession().createQuery(
-			    "from Concept c join c.conceptSets sets where sets.concept = ?").setParameter(0, current);
+			    "from Concept c join c.conceptSets sets where sets.concept = ?1").setParameter(1, current);
 			List<Concept> immedParents = query.getResultList();
 			for (Concept c : immedParents) {
 				parents.addAll(getParents(c));
