@@ -2371,7 +2371,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 		CriteriaQuery<ConceptReferenceRange> cq = cb.createQuery(ConceptReferenceRange.class);
 		Root<ConceptReferenceRange> root = cq.from(ConceptReferenceRange.class);
 
-		cq.where(cb.equal(root.get("conceptNumeric"), conceptId));
+		cq.where(cb.equal(root.get("conceptNumeric").get("conceptId"), conceptId));
 
 		return session.createQuery(cq).getResultList();
 	}
