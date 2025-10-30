@@ -17,9 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,9 +141,9 @@ public class ChainingInterceptor implements Interceptor {
 	
 	// returns the first non-null response from all interceptors
 	@Override
-	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) {
+	public Object instantiate(String entityName, RepresentationMode representationMode, Object id) {
 		for (Interceptor i : interceptors) {
-			Object o = i.instantiate(entityName, entityMode, id);
+			Object o = i.instantiate(entityName, representationMode, id);
 			if (o != null) {
 				return o;
 			}
@@ -228,16 +228,6 @@ public class ChainingInterceptor implements Interceptor {
 		for (Interceptor i : interceptors) {
 			i.beforeTransactionCompletion(tx);
 		}
-	}
-	
-	// passes the sql returned from each previous onPrepareStatement onto the next
-	@Override
-	public String onPrepareStatement(String sql) {
-		for (Interceptor i : interceptors) {
-			sql = i.onPrepareStatement(sql);
-		}
-		
-		return sql;
 	}
 	
 	@Override

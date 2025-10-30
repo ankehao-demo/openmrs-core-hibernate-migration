@@ -380,7 +380,7 @@ public class HibernateContextDAO implements ContextDAO {
 	 */
 	@Override
 	public void evictEntity(OpenmrsObject obj) {
-		sessionFactory.getCache().evictEntity(obj.getClass(), obj.getId());
+		sessionFactory.getCache().evict(obj.getClass(), obj.getId());
 	}
 
 	/**
@@ -388,9 +388,8 @@ public class HibernateContextDAO implements ContextDAO {
 	 */
 	@Override
 	public void evictAllEntities(Class<?> entityClass) {
-		sessionFactory.getCache().evictEntityRegion(entityClass);
-		sessionFactory.getCache().evictCollectionRegions();
-		sessionFactory.getCache().evictQueryRegions();
+		sessionFactory.getCache().evictEntityData(entityClass);
+		sessionFactory.getCache().evictAllRegions();
 	}
 
 	/**
@@ -539,7 +538,7 @@ public class HibernateContextDAO implements ContextDAO {
 				while (results.next()) {
 					index++;
 					//index each element
-					indexingPlan.addOrUpdate(results.get(0));
+					indexingPlan.addOrUpdate(results.get());
 					if (index % 1000 == 0) {
 						//apply changes to search indexes
 						indexingPlan.execute();

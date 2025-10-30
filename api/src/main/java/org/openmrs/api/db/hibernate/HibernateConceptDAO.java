@@ -11,13 +11,13 @@ package org.openmrs.api.db.hibernate;
 
 import static java.util.stream.Collectors.toList;
 
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -170,7 +170,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 		if (concept instanceof ConceptNumeric) {
 			
 			String select = "SELECT 1 from concept_numeric WHERE concept_id = :conceptId";
-			Query query = sessionFactory.getCurrentSession().createSQLQuery(select);
+			Query query = sessionFactory.getCurrentSession().createNativeQuery(select);
 			query.setParameter("conceptId", concept.getConceptId());
 			
 			// Converting to concept numeric:  A single concept row exists, but concept numeric has not been populated yet.
@@ -186,7 +186,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 				deleteSubclassConcept("concept_complex", concept.getConceptId());
 				
 				String insert = "INSERT INTO concept_numeric (concept_id, allow_decimal) VALUES (:conceptId, false)";
-				query = sessionFactory.getCurrentSession().createSQLQuery(insert);
+				query = sessionFactory.getCurrentSession().createNativeQuery(insert);
 				query.setParameter("conceptId", concept.getConceptId());
 				query.executeUpdate();
 				
@@ -204,7 +204,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 		else if (concept instanceof ConceptComplex) {
 			
 			String select = "SELECT 1 FROM concept_complex WHERE concept_id = :conceptId";
-			Query query = sessionFactory.getCurrentSession().createSQLQuery(select);
+			Query query = sessionFactory.getCurrentSession().createNativeQuery(select);
 			query.setParameter("conceptId", concept.getConceptId());
 			
 			// Converting to concept complex:  A single concept row exists, but concept complex has not been populated yet.
@@ -221,7 +221,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 				
 				// Add an empty row into the concept_complex table
 				String insert = "INSERT INTO concept_complex (concept_id) VALUES (:conceptId)";
-				query = sessionFactory.getCurrentSession().createSQLQuery(insert);
+				query = sessionFactory.getCurrentSession().createNativeQuery(insert);
 				query.setParameter("conceptId", concept.getConceptId());
 				query.executeUpdate();
 				
@@ -246,7 +246,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 	 */
 	private void deleteSubclassConcept(String tableName, Integer conceptId) {
 		String delete = "DELETE FROM " + tableName + " WHERE concept_id = :conceptId";
-		Query query = sessionFactory.getCurrentSession().createSQLQuery(delete);
+		Query query = sessionFactory.getCurrentSession().createNativeQuery(delete);
 		query.setParameter("conceptId", conceptId);
 		query.executeUpdate();
 	}
@@ -896,7 +896,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 		List<Concept> parents = new ArrayList<>();
 		if (current != null) {
 			Query query = sessionFactory.getCurrentSession().createQuery(
-			    "from Concept c join c.conceptSets sets where sets.concept = ?").setParameter(0, current);
+			    "from Concept c join c.conceptSets sets where sets.concept = ?1").setParameter(1, current);
 			List<Concept> immedParents = query.getResultList();
 			for (Concept c : immedParents) {
 				parents.addAll(getParents(c));
@@ -1323,7 +1323,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 	 */
 	@Override
 	public ConceptDatatype getSavedConceptDatatype(Concept concept) {
-		Query sql = sessionFactory.getCurrentSession().createSQLQuery(
+		Query sql = sessionFactory.getCurrentSession().createNativeQuery(
 				"select datatype.* from concept_datatype datatype, concept concept where " +
 					"datatype.concept_datatype_id = concept.datatype_id and concept.concept_id=:conceptId")
 			.addEntity(ConceptDatatype.class);
@@ -2371,7 +2371,7 @@ public class HibernateConceptDAO implements ConceptDAO {
 		CriteriaQuery<ConceptReferenceRange> cq = cb.createQuery(ConceptReferenceRange.class);
 		Root<ConceptReferenceRange> root = cq.from(ConceptReferenceRange.class);
 
-		cq.where(cb.equal(root.get("conceptNumeric"), conceptId));
+		cq.where(cb.equal(root.get("conceptNumeric").get("conceptId"), conceptId));
 
 		return session.createQuery(cq).getResultList();
 	}

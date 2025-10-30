@@ -10,13 +10,15 @@
 package org.openmrs.api.db.hibernate;
 
 import java.io.Serializable;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.Configurable;
-import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -33,27 +35,83 @@ import org.hibernate.type.Type;
  * 
  * @author paul.shemansky@gmail.com
  */
-public class NativeIfNotAssignedIdentityGenerator extends IdentityGenerator implements Configurable {
+public class NativeIfNotAssignedIdentityGenerator implements IdentifierGenerator, Configurable {
 	
 	private String entityName;
 	
+	private String sequenceName;
+	
 	@Override
-	public Serializable generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
-		Serializable id;
+	public Object generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
 		EntityPersister persister = session.getEntityPersister(entityName, entity);
-		// Determine if an ID has been assigned.
-		id = persister.getIdentifier(entity, session);
-		if (id == null) {
-			id = super.generate(session, entity);
+		Object id = persister.getIdentifier(entity, session);
+		if (id == null && sequenceName != null) {
+			try {
+				id = session.doReturningWork(connection -> {
+					String dialectName = session.getFactory().getJdbcServices().getDialect().getClass().getSimpleName();
+					
+					try (Statement stmt = connection.createStatement()) {
+						String checkSeq = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_NAME = '" + sequenceName.toUpperCase() + "'";
+						ResultSet rs = stmt.executeQuery(checkSeq);
+						boolean exists = false;
+						if (rs.next()) {
+							exists = rs.getInt(1) > 0;
+						}
+						rs.close();
+						
+						if (!exists) {
+							stmt.execute("CREATE SEQUENCE " + sequenceName + " START WITH 1 INCREMENT BY 1");
+							
+							String tableName = entityName.substring(entityName.lastIndexOf('.') + 1).toLowerCase();
+							String idColumn = tableName + "_id";
+							String maxIdQuery = "SELECT COALESCE(MAX(" + idColumn + "), 0) FROM " + tableName;
+							ResultSet maxRs = stmt.executeQuery(maxIdQuery);
+							int maxId = 0;
+							if (maxRs.next()) {
+								maxId = maxRs.getInt(1);
+							}
+							maxRs.close();
+							
+							if (maxId > 0) {
+								stmt.execute("ALTER SEQUENCE " + sequenceName + " RESTART WITH " + (maxId + 1));
+							}
+						}
+					} catch (Exception e) {
+					}
+					
+					String sql;
+					if (dialectName.contains("PostgreSQL") || dialectName.contains("Postgres")) {
+						sql = "SELECT nextval('" + sequenceName + "')";
+					} else if (dialectName.contains("H2")) {
+						sql = "SELECT NEXT VALUE FOR " + sequenceName;
+					} else if (dialectName.contains("Oracle")) {
+						sql = "SELECT " + sequenceName + ".nextval FROM dual";
+					} else {
+						sql = "SELECT NEXT VALUE FOR " + sequenceName;
+					}
+					
+					try (Statement stmt = connection.createStatement();
+					     ResultSet rs = stmt.executeQuery(sql)) {
+						if (rs.next()) {
+							return rs.getInt(1);
+						}
+					}
+					return null;
+				});
+			} catch (Exception e) {
+				return null;
+			}
 		}
 		return id;
 	}
 
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		this.entityName = params.getProperty(ENTITY_NAME);
+		this.entityName = params.getProperty(IdentifierGenerator.ENTITY_NAME);
 		if (entityName == null) {
 			throw new MappingException("no entity name");
 		}
+		
+		this.sequenceName = params.getProperty("sequence");
 	}
 }

@@ -923,8 +923,7 @@ public abstract class BaseContextSensitiveTest {
 	 */
 	public void clearHibernateCache() {
 		SessionFactory sf = (SessionFactory) applicationContext.getBean("sessionFactory");
-		sf.getCache().evictCollectionRegions();
-		sf.getCache().evictEntityRegions();
+		sf.getCache().evictAllRegions();
 	}
 	
 	/**

@@ -9,18 +9,16 @@
  */
 package org.openmrs.util.databasechange;
 
-import java.sql.Types;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.MySQLDialect;
 
-public class MySQL5LessStrictDialect extends MySQL5Dialect {
+/**
+ * Note: In Hibernate 6, the column type registration API changed significantly.
+ * This dialect now simply extends MySQLDialect without custom type mappings.
+ * The validation logic may need to be updated to be more lenient with type differences.
+ */
+public class MySQL5LessStrictDialect extends MySQLDialect {
 	
 	public MySQL5LessStrictDialect() {
 		super();
-		
-		// MySQL5Dialect incorrectly sets these to synonyms in Maria DB
-		registerColumnType(Types.BIGINT, "integer");
-		
-		// Our UUIDs are created as char(38), but MySQL5Dialect maps them to varchars
-		registerColumnType(Types.VARCHAR, 38, "char($1)");
 	}
 }

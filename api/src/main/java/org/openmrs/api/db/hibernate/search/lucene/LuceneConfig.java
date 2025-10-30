@@ -16,7 +16,6 @@ import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilterFactory;
 import org.apache.lucene.analysis.ngram.EdgeNGramFilterFactory;
 import org.apache.lucene.analysis.ngram.NGramFilterFactory;
 import org.apache.lucene.analysis.phonetic.PhoneticFilterFactory;
-import org.apache.lucene.analysis.standard.ClassicFilterFactory;
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurationContext;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurer;
@@ -45,19 +44,16 @@ public class LuceneConfig implements LuceneAnalysisConfigurer {
 		
 		context.analyzer(SearchAnalysis.PHRASE_ANALYZER).custom()
 			.tokenizer(KeywordTokenizerFactory.class)
-			.tokenFilter(ClassicFilterFactory.class)
 			.tokenFilter(LowerCaseFilterFactory.class)
 			.tokenFilter(ASCIIFoldingFilterFactory.class);
 
 		context.analyzer(SearchAnalysis.EXACT_ANALYZER).custom()
 			.tokenizer(WhitespaceTokenizerFactory.class)
-			.tokenFilter(ClassicFilterFactory.class)
 			.tokenFilter(LowerCaseFilterFactory.class)
 			.tokenFilter(ASCIIFoldingFilterFactory.class);
 
 		context.analyzer(SearchAnalysis.START_ANALYZER).custom()
 			.tokenizer(WhitespaceTokenizerFactory.class)
-			.tokenFilter(ClassicFilterFactory.class)
 			.tokenFilter(LowerCaseFilterFactory.class)
 			.tokenFilter(ASCIIFoldingFilterFactory.class)
 			.tokenFilter(EdgeNGramFilterFactory.class)
@@ -66,7 +62,6 @@ public class LuceneConfig implements LuceneAnalysisConfigurer {
 
 		context.analyzer(SearchAnalysis.ANYWHERE_ANALYZER).custom()
 			.tokenizer(WhitespaceTokenizerFactory.class)
-			.tokenFilter(ClassicFilterFactory.class)
 			.tokenFilter(LowerCaseFilterFactory.class)
 			.tokenFilter(ASCIIFoldingFilterFactory.class)
 			.tokenFilter(NGramFilterFactory.class)
@@ -75,7 +70,6 @@ public class LuceneConfig implements LuceneAnalysisConfigurer {
 
 		context.analyzer(SearchAnalysis.SOUNDEX_ANALYZER).custom()
 			.tokenizer(StandardTokenizerFactory.class)
-			.tokenFilter(ClassicFilterFactory.class)
 			.tokenFilter(LowerCaseFilterFactory.class)
 			.tokenFilter(PhoneticFilterFactory.class)
 			.param("encoder", "Soundex");
