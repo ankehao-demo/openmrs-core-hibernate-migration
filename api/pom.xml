@@ -92,7 +92,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
-			<artifactId>infinispan-spring5-embedded</artifactId>
+			<artifactId>infinispan-spring6-embedded</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>ca.uhn.hapi</groupId>
@@ -134,7 +134,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
-			<artifactId>infinispan-hibernate-cache-v53</artifactId>
+			<artifactId>infinispan-hibernate-cache-v62</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.search</groupId>
@@ -193,8 +193,8 @@
 			<artifactId>xercesImpl</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
