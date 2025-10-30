@@ -162,9 +162,10 @@ public class HibernateSessionFactoryBean extends LocalSessionFactoryBean impleme
 			props.put("hibernate.cache.infinispan.jgroups_cfg",jChannelConfig);
 			
 			// Load infinispan config based on selected cache type
-			String local = "local".equalsIgnoreCase(cacheType.trim()) ? "-local" : "";
-			props.put("hibernate.cache.infinispan.cfg", 
-				"org/infinispan/hibernate/cache/commons/builder/infinispan-configs" + local + ".xml");
+			// Commenting out custom config path - let Infinispan use its default configuration
+			// String local = "local".equalsIgnoreCase(cacheType.trim()) ? "-local" : "";
+			// props.put("hibernate.cache.infinispan.cfg", 
+			// 	"org/infinispan/hibernate/cache/v62/infinispan-configs" + local + ".xml");
 			
 			// Only load in the default properties if they don't exist
 			for (Entry<Object, Object> prop : props.entrySet()) {

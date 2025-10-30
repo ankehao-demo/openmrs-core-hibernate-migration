@@ -28,7 +28,7 @@ import java.util.Map;
 
 import com.thoughtworks.xstream.XStreamException;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Column;
 import org.hibernate.type.OrderedMapType;

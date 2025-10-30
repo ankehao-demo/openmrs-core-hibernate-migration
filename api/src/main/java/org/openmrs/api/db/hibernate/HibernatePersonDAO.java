@@ -9,11 +9,11 @@
  */
 package org.openmrs.api.db.hibernate;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.openmrs.Person;
@@ -666,7 +666,7 @@ public class HibernatePersonDAO implements PersonDAO {
 	 */
 	@Override
 	public String getSavedPersonAttributeTypeName(PersonAttributeType personAttributeType) {
-		SQLQuery sql = sessionFactory.getCurrentSession().createSQLQuery(
+		NativeQuery sql = sessionFactory.getCurrentSession().createNativeQuery(
 		    "select name from person_attribute_type where person_attribute_type_id = :personAttributeTypeId");
 		sql.setParameter("personAttributeTypeId", personAttributeType.getId());
 		return (String) sql.uniqueResult();
@@ -674,7 +674,7 @@ public class HibernatePersonDAO implements PersonDAO {
 
 	@Override
 	public Boolean getSavedPersonAttributeTypeSearchable(PersonAttributeType personAttributeType) {
-		SQLQuery sql = sessionFactory.getCurrentSession().createSQLQuery(
+		NativeQuery sql = sessionFactory.getCurrentSession().createNativeQuery(
 			"select searchable from person_attribute_type where person_attribute_type_id = :personAttributeTypeId");
 		sql.setParameter("personAttributeTypeId", personAttributeType.getId());
 		return (Boolean) sql.uniqueResult();

@@ -9,10 +9,10 @@
  */
 package org.openmrs.api.db.hibernate;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,14 +25,12 @@ import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TextType;
-import org.hibernate.type.Type;
+import org.hibernate.persister.entity.EntityPersister;
 import org.openmrs.GlobalProperty;
 import org.openmrs.OpenmrsObject;
 import org.openmrs.api.APIException;
@@ -227,7 +225,8 @@ public class HibernateAdministrationDAO implements AdministrationDAO, Applicatio
 		} else {
 			int fieldLength;
 			try {
-				fieldLength = ((Column) persistentClass.getProperty(fieldName).getColumnIterator().next()).getLength();
+				Column column = (Column) persistentClass.getProperty(fieldName).getValue().getColumns().get(0);
+				fieldLength = column.getLength().intValue();
 			}
 			catch (Exception e) {
 				log.debug("Could not determine maximum length", e);
@@ -252,45 +251,44 @@ public class HibernateAdministrationDAO implements AdministrationDAO, Applicatio
 	 * <strong>Should</strong> Pass validation for location class if field lengths are correct
 	 */
 	
-	//@SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
 	@Override
 	public void validate(Object object, Errors errors) throws DAOException {
 		Class entityClass = object.getClass();
-		ClassMetadata metadata = null;
+		EntityPersister metadata = null;
 		try {
-			metadata = sessionFactory.getClassMetadata(entityClass);
+			metadata = sessionFactory.unwrap(SessionFactoryImplementor.class)
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor(entityClass);
 		}
-		catch (MappingException ex) {
+		catch (Exception ex) {
 			log.debug(entityClass + " is not a hibernate mapped entity", ex);
 		}
 		if (metadata != null) {
 			String[] propNames = metadata.getPropertyNames();
-			Object identifierType = metadata.getIdentifierType();
 			String identifierName = metadata.getIdentifierPropertyName();
-			if (identifierType instanceof StringType || identifierType instanceof TextType) {
+			
+			Object identifierValue = metadata.getIdentifier(object,
+			    (SessionImplementor) sessionFactory.getCurrentSession());
+			if (identifierValue instanceof String) {
 				int maxLength = getMaximumPropertyLength(entityClass, identifierName);
-				String identifierValue = (String) metadata.getIdentifier(object,
-				    (SessionImplementor) sessionFactory.getCurrentSession());
-				if (identifierValue != null) {
-					int identifierLength = identifierValue.length();
-					if (identifierLength > maxLength) {
-						
-						errors.rejectValue(identifierName, "error.exceededMaxLengthOfField", new Object[] { maxLength },
-						    null);
-					}
+				String identifierStringValue = (String) identifierValue;
+				int identifierLength = identifierStringValue.length();
+				if (identifierLength > maxLength && maxLength > 0) {
+					errors.rejectValue(identifierName, "error.exceededMaxLengthOfField", new Object[] { maxLength },
+					    null);
 				}
 			}
+			
 			for (String propName : propNames) {
-				Type propType = metadata.getPropertyType(propName);
-				if (propType instanceof StringType || propType instanceof TextType) {
-					String propertyValue = (String) metadata.getPropertyValue(object, propName);
-					if (propertyValue != null) {
-						int maxLength = getMaximumPropertyLength(entityClass, propName);
-						int propertyValueLength = propertyValue.length();
-						if (propertyValueLength > maxLength) {
-							errors.rejectValue(propName, "error.exceededMaxLengthOfField", new Object[] { maxLength },
-									null);
-						}
+				Object propertyValue = metadata.getPropertyValue(object, propName);
+				if (propertyValue instanceof String) {
+					String propertyStringValue = (String) propertyValue;
+					int maxLength = getMaximumPropertyLength(entityClass, propName);
+					int propertyValueLength = propertyStringValue.length();
+					if (propertyValueLength > maxLength && maxLength > 0) {
+						errors.rejectValue(propName, "error.exceededMaxLengthOfField", new Object[] { maxLength },
+								null);
 					}
 				}
 			}

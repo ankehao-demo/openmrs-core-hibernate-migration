@@ -111,7 +111,7 @@ public class CacheConfig {
 			// Skip already defined caches.
 			InputStream fullConfig = buildFullConfig(yaml, configFile,
 				baseConfigBuilder.getNamedConfigurationBuilders().keySet(), cacheType);
-			parser.parse(fullConfig, baseConfigBuilder, null,
+			parser.parse(fullConfig, baseConfigBuilder, (path) -> null,
 				MediaType.APPLICATION_YAML);
 		}
 		
