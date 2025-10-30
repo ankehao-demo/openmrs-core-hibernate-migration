@@ -622,17 +622,17 @@ public class HibernatePatientDAO implements PatientDAO {
 			hql += " and p.patientId != :ptId";
 		}
 		if (checkLocation) {
-			hql += " and pi.location = :locationId";
+			hql += " and pi.location = :location";
 		}
 		
 		Query query = sessionFactory.getCurrentSession().createQuery(hql);
 		query.setParameter("identifier", patientIdentifier.getIdentifier());
-		query.setParameter("idType", patientIdentifier.getIdentifierType().getPatientIdentifierTypeId());
+		query.setParameter("idType", patientIdentifier.getIdentifierType());
 		if (checkPatient) {
 			query.setParameter("ptId", patientIdentifier.getPatient().getPatientId());
 		}
 		if (checkLocation) {
-			query.setParameter("locationId", patientIdentifier.getLocation().getLocationId());
+			query.setParameter("location", patientIdentifier.getLocation());
 		}
 		return !"0".equals(query.uniqueResult().toString());
 	}
